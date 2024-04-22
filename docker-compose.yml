@@ -1,0 +1,38 @@
+version: "3.8"
+volumes:
+  blog-volume:
+networks:
+  blog-network:
+
+services:
+  db:
+    container_name: blog-db
+    image: "alpine"
+    command: "tail -f /dev/null"
+    environment:
+      - H2_CONSOLE_ENABLED=true
+      - H2_CONSOLE_PATH=/h2-console
+    ports:
+      - "8082:8082"
+    volumes:
+      - blog-volume:/var/lib/h2
+    networks:
+      - blog-network
+
+  backend:
+    container_name: blog-api
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_URL=jdbc:h2:mem:blog_db
+        - DB_USERNAME=sa
+        - DB_PASSWORD=password
+        - JWT_SECRET=${JWT_SECRET}
+        - JWT_EXPIRATION=${JWT_EXPIRATION}
+    networks:
+      - blog-network
